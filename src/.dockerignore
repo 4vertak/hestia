@@ -1,0 +1,36 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Environment
+.env
+.env.example
+
+# IDE
+.idea/
+.vscode/
+
+# Tests
+*_test.go
+internal/repository/mocks/
+
+# Local binaries
+/bin
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Documentation (генерируется заново в Dockerfile)
+docs/
+
+# Misc
+Makefile
+README.md
+docker-compose.yml
+Dockerfile
+
+# OS files
+.DS_Store
+Thumbs.db

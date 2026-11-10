@@ -1,6 +1,12 @@
 package config
 
-import "os"
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/joho/godotenv"
+)
 
 type Config struct {
 	ServerPort string
@@ -12,21 +18,37 @@ type Config struct {
 	DBSSLMode  string
 }
 
-func Load() *Config {
-	return &Config{
-		ServerPort: getEnv("SERVER_PORT", "8080"),
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "postgres"),
-		DBName:     getEnv("DB_NAME", "store"),
-		DBSSLMode:  getEnv("DB_SSLMODE", "disable"),
-	}
+func Load() (*Config, error) {
+	return load(".env")
 }
 
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
+func load(path string) (*Config, error) {
+	values, err := godotenv.Read(path)
+	if err != nil && !os.IsNotExist(err) {
+		// Parser errors can contain secret values from the file.
+		return nil, fmt.Errorf("cannot load configuration file %q", path)
+	}
+	get := func(key, fallback string) string {
+		value, exists := os.LookupEnv(key)
+		if !exists {
+			value = values[key]
+		}
+		if value == "" {
+			return fallback
+		}
 		return value
 	}
-	return fallback
+	cfg := &Config{
+		ServerPort: get("SERVER_PORT", "8080"),
+		DBHost:     get("DB_HOST", "127.0.0.1"),
+		DBPort:     get("DB_PORT", "5432"),
+		DBUser:     get("DB_USER", "hestia"),
+		DBPassword: get("DB_PASSWORD", ""),
+		DBName:     get("DB_NAME", "store"),
+		DBSSLMode:  get("DB_SSLMODE", "disable"),
+	}
+	if cfg.DBPassword == "" {
+		return nil, errors.New("DB_PASSWORD must be set in the environment or .env")
+	}
+	return cfg, nil
 }

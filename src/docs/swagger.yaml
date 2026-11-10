@@ -1,0 +1,746 @@
+basePath: /
+definitions:
+  dto.AddressRequest:
+    properties:
+      city:
+        maxLength: 100
+        type: string
+      country:
+        maxLength: 100
+        type: string
+      street:
+        maxLength: 255
+        type: string
+    required:
+    - city
+    - country
+    - street
+    type: object
+  dto.AddressResponse:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      id:
+        type: string
+      street:
+        type: string
+    type: object
+  dto.ClientCreateRequest:
+    properties:
+      address:
+        $ref: '#/definitions/dto.AddressRequest'
+      birthday:
+        description: ISO 8601
+        type: string
+      gender:
+        enum:
+        - M
+        - F
+        - O
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      surname:
+        maxLength: 100
+        type: string
+    required:
+    - address
+    - name
+    - surname
+    type: object
+  dto.ClientResponse:
+    properties:
+      address:
+        $ref: '#/definitions/dto.AddressResponse'
+      birthday:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      registration_date:
+        type: string
+      surname:
+        type: string
+    type: object
+  dto.ClientUpdateAddressRequest:
+    properties:
+      address:
+        $ref: '#/definitions/dto.AddressRequest'
+    required:
+    - address
+    type: object
+  dto.ImageResponse:
+    properties:
+      id:
+        type: string
+      product_id:
+        type: string
+    type: object
+  dto.ProductCreateRequest:
+    properties:
+      available_stock:
+        minimum: 0
+        type: integer
+      category:
+        maxLength: 100
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      price:
+        type: number
+      supplier_id:
+        type: string
+    required:
+    - category
+    - name
+    - price
+    - supplier_id
+    type: object
+  dto.ProductDecreaseRequest:
+    properties:
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - quantity
+    type: object
+  dto.ProductResponse:
+    properties:
+      available_stock:
+        type: integer
+      category:
+        type: string
+      id:
+        type: string
+      image_id:
+        type: string
+      last_update_date:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      supplier_id:
+        type: string
+    type: object
+  dto.SupplierCreateRequest:
+    properties:
+      address:
+        $ref: '#/definitions/dto.AddressRequest'
+      name:
+        maxLength: 255
+        type: string
+      phone_number:
+        maxLength: 20
+        type: string
+    required:
+    - address
+    - name
+    type: object
+  dto.SupplierResponse:
+    properties:
+      address:
+        $ref: '#/definitions/dto.AddressResponse'
+      id:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  dto.SupplierUpdateAddressRequest:
+    properties:
+      address:
+        $ref: '#/definitions/dto.AddressRequest'
+    required:
+    - address
+    type: object
+  handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: REST API for an appliance store.
+  title: HESTIA — Home Equipment Store Transactional Interface API
+  version: "1.0"
+paths:
+  /api/v1/clients:
+    get:
+      parameters:
+      - description: Client name
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Client surname
+        in: query
+        name: surname
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ClientResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Поиск по имени и фамилии клиента
+      tags:
+      - Clients
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ClientCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ClientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Создать нового клиента
+      tags:
+      - Clients
+  /api/v1/clients/{id}:
+    delete:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Удалить клиента по ID
+      tags:
+      - Clients
+  /api/v1/clients/{id}/address:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New address data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ClientUpdateAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ClientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Обновить адрес клиента
+      tags:
+      - Clients
+  /api/v1/clients/all:
+    get:
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ClientResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить всех клиентов
+      tags:
+      - Clients
+  /api/v1/images:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Product ID
+        in: formData
+        name: product_id
+        required: true
+        type: string
+      - description: Image file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ImageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Загрузить изображение продукта
+      tags:
+      - Images
+  /api/v1/images/{id}:
+    delete:
+      parameters:
+      - description: Image ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Удалить изображение
+      tags:
+      - Images
+    get:
+      parameters:
+      - description: Image ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить изображение по ID
+      tags:
+      - Images
+    put:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Image ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New image file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Заменить изображение по ID
+      tags:
+      - Images
+  /api/v1/images/product/{productId}:
+    get:
+      parameters:
+      - description: Product ID
+        in: path
+        name: productId
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить изображение продукта по ID
+      tags:
+      - Images
+  /api/v1/products:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ProductResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить доступные продукты
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ProductCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Создать продукт
+      tags:
+      - Products
+  /api/v1/products/{id}:
+    delete:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Удалить продукт по ID
+      tags:
+      - Products
+    get:
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить продукт по ID
+      tags:
+      - Products
+  /api/v1/products/{id}/decrease:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Quantity to decrease
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ProductDecreaseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Уменьшить остаток продукта
+      tags:
+      - Products
+  /api/v1/suppliers:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.SupplierResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить всех поставщиков
+      tags:
+      - Suppliers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Supplier data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SupplierCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.SupplierResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Создать поставщика
+      tags:
+      - Suppliers
+  /api/v1/suppliers/{id}:
+    delete:
+      parameters:
+      - description: Supplier ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Удалить поставщика
+      tags:
+      - Suppliers
+    get:
+      parameters:
+      - description: Supplier ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SupplierResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить поставщика по ID
+      tags:
+      - Suppliers
+  /api/v1/suppliers/{id}/address:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Supplier ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New address data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SupplierUpdateAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SupplierResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Обновить адрес поставщика
+      tags:
+      - Suppliers
+swagger: "2.0"

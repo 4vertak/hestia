@@ -9,9 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	_ "github.com/4vertak/hestia/docs" // сгенерированная документация
 	"github.com/4vertak/hestia/internal/config"
 	"github.com/4vertak/hestia/internal/database"
@@ -19,17 +16,24 @@ import (
 	"github.com/4vertak/hestia/internal/handler/middleware"
 	"github.com/4vertak/hestia/internal/repository/postgres"
 	"github.com/4vertak/hestia/internal/service"
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // @title HESTIA — Home Equipment Store Transactional Interface API
 // @version 1.0
 // @description REST API for an appliance store.
-// @BasePath /api/v1
+// @BasePath /
 func main() {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
 	// Загрузка конфигурации
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		slog.Error("invalid configuration", "error", err)
+		os.Exit(1)
+	}
 
 	// Подключение к базе данных
 	db, err := database.NewPostgresDB(cfg)
@@ -40,8 +44,8 @@ func main() {
 	defer db.Close()
 	slog.Info("connected to database")
 
-	// Запуск миграций (путь относительно рабочей директории)
-	if err := database.RunMigrations(db, "migrations"); err != nil {
+	// Миграции включены в бинарник и не зависят от рабочего каталога.
+	if err := database.RunMigrations(db); err != nil {
 		slog.Error("failed to run migrations", "error", err)
 		os.Exit(1)
 	}

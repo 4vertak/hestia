@@ -5,7 +5,7 @@
 
 # Environment
 .env
-.env.example
+.env.*
 
 # IDE
 .idea/
@@ -21,9 +21,6 @@ internal/repository/mocks/
 *.dll
 *.so
 *.dylib
-
-# Documentation (генерируется заново в Dockerfile)
-docs/
 
 # Misc
 Makefile

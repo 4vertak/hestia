@@ -1,31 +1,48 @@
-.PHONY: run build swagger migrate-up migrate-down test
+.DEFAULT_GOAL := build
+.PHONY: run run-local run-docker docker-down build swagger swagger-check migrate-up migrate-down test vet clean
 
-include .env
-export
+GO ?= go
+SWAG_VERSION := v1.16.6
+SWAG = $(GO) run github.com/swaggo/swag/cmd/swag@$(SWAG_VERSION)
 
-run:
-	docker-compose up --build
-
-run-local:
-	export $$(cat .env | xargs) && go run ./cmd/server
-
-build:
-	go build -o bin/server ./cmd/server
+# Generated docs are tracked. Regenerate explicitly after changing annotations.
+docs/docs.go:
+	$(MAKE) swagger
 
 swagger:
-	swag init -g cmd/server/main.go --output docs
+	$(SWAG) init -g cmd/server/main.go --output docs --packageName docs
 
+swagger-check:
+	@set -eu; generated=$$(mktemp -d); trap 'rm -rf "$$generated"' EXIT; \
+	$(SWAG) init -g cmd/server/main.go --output "$$generated" --packageName docs; \
+	diff -ru docs "$$generated"
+
+build: docs/docs.go
+	$(GO) build -o bin/server ./cmd/server
+
+test: docs/docs.go
+	$(GO) test -count=1 -timeout 30s ./...
+
+vet: docs/docs.go
+	$(GO) vet ./...
+
+run: run-local
+
+run-local: build
+	./bin/server
+
+run-docker:
+	docker compose up --build
+
+docker-down:
+	docker compose down
+
+# Share the application's .env loading and embedded migrations; no migrate CLI.
 migrate-up:
-	migrate -path internal/database/migrations -database "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}" up
+	$(GO) run ./cmd/migrate up
 
 migrate-down:
-	migrate -path internal/database/migrations -database "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}" down
-
-test:
-	export PATH=$$PATH:$$(go env GOPATH)/bin && \
-	swag init -g cmd/server/main.go --output docs && \
-	go test -count=1 ./... -timeout 30s -v 2>&1 | sed '/no test files/d'
+	$(GO) run ./cmd/migrate down
 
 clean:
-	rm -rf ./docs
-	rm -rf ./bin
+	rm -rf bin
